@@ -1,0 +1,747 @@
+{
+  "generatedAt": "2026-10-13T11:26:37.878Z",
+  "env": "ppe",
+  "node": "v24.21.0",
+  "tokenInjected": false,
+  "counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "MISMATCH": 2,
+    "BLOCKED": 0,
+    "SKIPPED": 44
+  },
+  "results": [
+    {
+      "id": "S1",
+      "group": "端到端",
+      "title": "上传 png / txt / pdf 三类文件并拿到 uri",
+      "api": "POST /v1/files",
+      "doc": "Files Upload：200，data.uri 为非空字符串，filename/size 回显。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.698Z"
+    },
+    {
+      "id": "S2",
+      "group": "端到端",
+      "title": "建会话带 initial_events（文本+文件）→ in_progress → 流式收完整回复 → 校验消息与 reply_id",
+      "api": "POST /v1/sessions + MessageStream",
+      "doc": "Create 带 initial_events：201 status=in_progress 且 messages[0] 为 completed 用户消息；MessageStream 收终态帧；assistant.reply_id 指向该用户消息。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S3",
+      "group": "端到端",
+      "title": "空会话(idle) → 发消息 → 202 → 流式+轮询 → 终态",
+      "api": "POST /v1/events + MessageStream",
+      "doc": "Events Create 返回 202；session 从 idle 进入 in_progress 再回 idle；assistant 消息 completed。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S4",
+      "group": "端到端",
+      "title": "同一会话连续 3 轮多轮对话（严格等待 idle）",
+      "api": "连续多轮 Events Create",
+      "doc": "每轮 202 → completed；每轮严格在 session idle 后才发下一条；消息列表含 3 对消息。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S5",
+      "group": "端到端",
+      "title": "一条消息携带文本与两个附件",
+      "api": "Events Create（文本+2 附件）",
+      "doc": "contents 支持多个 text/file 块；202 → completed；用户消息 items 含 3 块。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S6",
+      "group": "端到端",
+      "title": "仅附件、无文本的消息",
+      "api": "Events Create（仅附件）",
+      "doc": "校验允许「至少一个 file」；202 → completed。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S7",
+      "group": "端到端",
+      "title": "长任务窗口内 interrupt → 终态 cancelled 且半截文本保留",
+      "api": "user.interrupt",
+      "doc": "in_progress 时提交 user.interrupt 返回 202；assistant 最终 cancelled；已生成 text item 保留。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S8",
+      "group": "端到端",
+      "title": "引导产出 artifact（document/file/image/link）",
+      "api": "artifact 观察",
+      "doc": "artifact item 的 artifact_type ∈ document/file/image/video/link；触发不了如实 BLOCKED。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S9",
+      "group": "端到端",
+      "title": "Messages List page_size=1 真翻页；asc/desc",
+      "api": "Messages List 分页",
+      "doc": "has_more=true 时带 page_token 逐页取完；消息 id 不重复；asc/desc 顺序不同。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S10",
+      "group": "端到端",
+      "title": "Sessions List 翻页与排序",
+      "api": "Sessions List 分页排序",
+      "doc": "page_size=1 可逐页；order=desc 首条 updated_at 不早于次条；asc 相反。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S11",
+      "group": "端到端",
+      "title": "Update 改名 → 空串 → 256 字符",
+      "api": "PATCH /v1/sessions/{id}",
+      "doc": "name 必传、可为空串、最长 256；覆盖写幂等。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S12",
+      "group": "端到端",
+      "title": "删除会话后 retrieve/update/events/messages 全部 404001",
+      "api": "删除后 404001",
+      "doc": "删除即归档，后续接口 404 / 404001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "S13",
+      "group": "端到端",
+      "title": "同一 uuid 幂等：建会话 / 上传 / 发事件返回首次结果",
+      "api": "uuid 幂等",
+      "doc": "同 uuid 24 小时内重复提交返回首次结果，不重复执行。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.699Z"
+    },
+    {
+      "id": "B1",
+      "group": "鉴权",
+      "title": "无 token 调用业务接口",
+      "api": "GET /v1/sessions",
+      "doc": "文档错误码表：HTTP 401 / 401001。真实网关码以实测为准（已知曾返回 99991668/99991661）。",
+      "verdict": "MISMATCH",
+      "summary": "HTTP 400 / code 99991661 / Missing access token for authorization. Please make a request with token attached.",
+      "checks": [
+        {
+          "name": "返回 401 类 HTTP",
+          "ok": true,
+          "severity": "fail",
+          "expected": "401/403/400",
+          "actual": "400"
+        },
+        {
+          "name": "业务 code 与文档不符",
+          "ok": false,
+          "severity": "mismatch",
+          "expected": "401001",
+          "actual": "99991661（Missing access token for authorization. Please make a request with token attached.）"
+        }
+      ],
+      "evidence": [
+        {
+          "label": "no-token",
+          "at": "2026-10-13T11:26:37.787Z",
+          "data": {
+            "ok": false,
+            "httpStatus": 400,
+            "code": 99991661,
+            "msg": "Missing access token for authorization. Please make a request with token attached.",
+            "data": {
+              "code": 99991661,
+              "msg": "Missing access token for authorization. Please make a request with token attached.",
+              "error": {
+                "log_id": "20261013192637701D50958B2A92C50C09",
+                "troubleshooter": "排查建议查看(Troubleshooting suggestions): https://open.feishu.cn/search?from=openapi&log_id=20261013192637701D50958B2A92C50C09&code=99991661&method_id=7688000877832178649"
+              }
+            },
+            "raw": {
+              "code": 99991661,
+              "msg": "Missing access token for authorization. Please make a request with token attached.",
+              "error": {
+                "log_id": "20261013192637701D50958B2A92C50C09",
+                "troubleshooter": "排查建议查看(Troubleshooting suggestions): https://open.feishu.cn/search?from=openapi&log_id=20261013192637701D50958B2A92C50C09&code=99991661&method_id=7688000877832178649"
+              }
+            },
+            "rawText": "{\"code\":99991661,\"msg\":\"Missing access token for authorization. Please make a request with token attached.\",\"error\":{\"log_id\":\"20261013192637701D50958B2A92C50C09\",\"troubleshooter\":\"排查建议查看(Troubleshooting suggestions): https://open.feishu.cn/search?from=openapi&log_id=20261013192637701D50958B2A92C50C09&code=99991661&method_id=7688000877832178649\"}}",
+            "durationMs": 87,
+            "request": {
+              "method": "GET",
+              "url": "https://open.feishu.cn/open-apis/agent/v1/sessions?page_size=1",
+              "headers": {
+                "X-Tt-Env": "ppe_doubao_oapi",
+                "X-Use-Ppe": "1"
+              }
+            }
+          }
+        }
+      ],
+      "durationMs": 88,
+      "at": "2026-10-13T11:26:37.787Z"
+    },
+    {
+      "id": "B2",
+      "group": "鉴权",
+      "title": "伪造 token 调用业务接口",
+      "api": "GET /v1/sessions",
+      "doc": "文档：HTTP 401 / 401001；真实网关码以实测为准。",
+      "verdict": "MISMATCH",
+      "summary": "HTTP 400 / code 99991668 / Invalid access token for authorization. Please make a request with token attached.",
+      "checks": [
+        {
+          "name": "返回 401 类 HTTP",
+          "ok": true,
+          "severity": "fail",
+          "expected": "401/403/400",
+          "actual": "400"
+        },
+        {
+          "name": "业务 code 与文档不符",
+          "ok": false,
+          "severity": "mismatch",
+          "expected": "401001",
+          "actual": "99991668（Invalid access token for authorization. Please make a request with token attached.）"
+        }
+      ],
+      "evidence": [
+        {
+          "label": "forged-token",
+          "at": "2026-10-13T11:26:37.875Z",
+          "data": {
+            "ok": false,
+            "httpStatus": 400,
+            "code": 99991668,
+            "msg": "Invalid access token for authorization. Please make a request with token attached.",
+            "data": {
+              "code": 99991668,
+              "msg": "Invalid access token for authorization. Please make a request with token attached.",
+              "error": {
+                "log_id": "2026101319263744010BD057B219BE604B",
+                "troubleshooter": "排查建议查看(Troubleshooting suggestions): https://open.feishu.cn/search?from=openapi&log_id=2026101319263744010BD057B219BE604B&code=99991668&method_id=7688000877832178649"
+              }
+            },
+            "raw": {
+              "code": 99991668,
+              "msg": "Invalid access token for authorization. Please make a request with token attached.",
+              "error": {
+                "log_id": "2026101319263744010BD057B219BE604B",
+                "troubleshooter": "排查建议查看(Troubleshooting suggestions): https://open.feishu.cn/search?from=openapi&log_id=2026101319263744010BD057B219BE604B&code=99991668&method_id=7688000877832178649"
+              }
+            },
+            "rawText": "{\"code\":99991668,\"msg\":\"Invalid access token for authorization. Please make a request with token attached.\",\"error\":{\"log_id\":\"2026101319263744010BD057B219BE604B\",\"troubleshooter\":\"排查建议查看(Troubleshooting suggestions): https://open.feishu.cn/search?from=openapi&log_id=2026101319263744010BD057B219BE604B&code=99991668&method_id=7688000877832178649\"}}",
+            "durationMs": 87,
+            "request": {
+              "method": "GET",
+              "url": "https://open.feishu.cn/open-apis/agent/v1/sessions?page_size=1",
+              "headers": {
+                "X-Tt-Env": "ppe_doubao_oapi",
+                "X-Use-Ppe": "1",
+                "••••••••": "••••••••"
+              }
+            }
+          }
+        }
+      ],
+      "durationMs": 87,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B3",
+      "group": "会话创建",
+      "title": "创建会话缺 uuid",
+      "api": "POST /v1/sessions",
+      "doc": "uuid 必填，缺失返回 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B4",
+      "group": "会话创建",
+      "title": "initial_events 两条",
+      "api": "POST /v1/sessions",
+      "doc": "initial_events 最多一条，多条 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B5",
+      "group": "会话创建",
+      "title": "initial_events 放 interrupt",
+      "api": "POST /v1/sessions",
+      "doc": "首条事件只能是 user.message，user.interrupt 返回 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B6",
+      "group": "事件参数",
+      "title": "contents 空数组",
+      "api": "POST /v1/events",
+      "doc": "contents 必填且不能为空数组，400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B7",
+      "group": "事件参数",
+      "title": "纯空白文本",
+      "api": "POST /v1/events",
+      "doc": "至少一段非空白文本或一个 file，纯空白 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B8",
+      "group": "事件参数",
+      "title": "file 块缺 uri",
+      "api": "POST /v1/events",
+      "doc": "file 必须带 uri，缺失 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B9",
+      "group": "事件参数",
+      "title": "user.message 携带 message_id",
+      "api": "POST /v1/events",
+      "doc": "user.message 不接受 message_id，400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B10",
+      "group": "事件参数",
+      "title": "user.interrupt 携带 contents",
+      "api": "POST /v1/events",
+      "doc": "interrupt 不能带 contents，400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B11",
+      "group": "更新边界",
+      "title": "PATCH 缺 name",
+      "api": "PATCH /v1/sessions/{id}",
+      "doc": "name 必须显式传入，缺失 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B12",
+      "group": "更新边界",
+      "title": "PATCH name 257 字符",
+      "api": "PATCH /v1/sessions/{id}",
+      "doc": "name 最长 256，257 字符 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B13",
+      "group": "分页",
+      "title": "page_size=0",
+      "api": "GET /v1/sessions",
+      "doc": "page_size 范围 1–100，0 返回 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B14",
+      "group": "分页",
+      "title": "page_size=101",
+      "api": "GET /v1/sessions",
+      "doc": "page_size 上限 100，101 返回 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B15",
+      "group": "分页",
+      "title": "page_size 非数字",
+      "api": "GET /v1/sessions",
+      "doc": "非数字返回 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B16",
+      "group": "分页",
+      "title": "page_size=1 成功",
+      "api": "GET /v1/sessions",
+      "doc": "下界 1 合法，200 且返回至多 1 条。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B17",
+      "group": "分页",
+      "title": "page_size=100 成功",
+      "api": "GET /v1/sessions",
+      "doc": "上界 100 合法，200。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B18",
+      "group": "分页",
+      "title": "翻页带 page_token 却改 order",
+      "api": "page_token + order",
+      "doc": "page_token 隐含排序，翻页时 order 必须一致，否则 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B19",
+      "group": "分页",
+      "title": "非法 page_token",
+      "api": "page_token 非法",
+      "doc": "page_token 非法或过期返回 400 / 400001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B20",
+      "group": "不存在",
+      "title": "不存在的 session",
+      "api": "GET /v1/sessions/{id}",
+      "doc": "404 / 404001。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B21",
+      "group": "不存在",
+      "title": "不存在的 message",
+      "api": "GET .../messages/{id}",
+      "doc": "文档预期 404；记录实际业务 code。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B22",
+      "group": "并发",
+      "title": "in_progress 连发两条 user.message",
+      "api": "in_progress 连发两条",
+      "doc": "第二条期望 409 / 409001。依赖真实生成窗口，抢不到窗口标 BLOCKED。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B23",
+      "group": "文件",
+      "title": "空文件上传",
+      "api": "POST /v1/files（空文件）",
+      "doc": "不允许空文件，400 / 400004。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B24",
+      "group": "文件",
+      "title": "不支持的扩展名",
+      "api": "POST /v1/files（坏扩展名）",
+      "doc": "扩展名白名单外返回 400 / 400002。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B25",
+      "group": "文件",
+      "title": "21MB 伪图片超过图片上限",
+      "api": "POST /v1/files（>20MB 图片）",
+      "doc": "图片不超过 20MB，超限 413 / 413001。大文件本地即时生成（约 21MB 上行）。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B26",
+      "group": "文件",
+      "title": "101MB 伪文件超过普通文件上限（需显式开启）",
+      "api": "POST /v1/files（>100MB 文件）",
+      "doc": "其它文件不超过 100MB，超限 413 / 413001。默认跳过（101MB 上行成本），RUN_LARGE_FILES=1 时执行。",
+      "verdict": "SKIPPED",
+      "summary": "设置 RUN_LARGE_FILES=1 以执行 101MB 上传用例（默认跳过以节省带宽）",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B27",
+      "group": "暂缓接口",
+      "title": "会话级 Stream 真实探测（文档标[暂缓]）",
+      "api": "GET /v1/sessions/{id}/events",
+      "doc": "不预设结果，记录真实 HTTP 状态、content-type 与前若干帧。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "B28",
+      "group": "限流",
+      "title": "429 限流（受控不运行）",
+      "api": "429001",
+      "doc": "文档定义 429 / 429001；按安全约束不主动压测，仅记录文档边界。自然触发时在真机运行中登记。",
+      "verdict": "SKIPPED",
+      "summary": "受控不运行：429001 仅记录文档定义，不进行任何压测",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "O1",
+      "group": "协议观察",
+      "title": "SSE seq 单调与帧序（start → delta → item）",
+      "api": "SSE seq/帧序",
+      "doc": "带 seq 帧在一条回复内单调递增；流式类型帧序为 start、若干 delta、item。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "O2",
+      "group": "协议观察",
+      "title": "Last-Event-ID 断线续传：补发帧严格在断点之后",
+      "api": "Last-Event-ID 续传",
+      "doc": "重连带 Last-Event-ID（message_id:seq），服务端从该 seq 之后补发落库帧再接实时；最终收到终态。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "O3",
+      "group": "协议观察",
+      "title": "同一 item 在 SSE 与 Messages Retrieve 中 id 一致",
+      "api": "SSE/Messages item id",
+      "doc": "流上的内容帧与 Messages 返回的 item 同 id。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "O4",
+      "group": "协议观察",
+      "title": "cancelled 后 session 恢复 idle 且可继续对话",
+      "api": "cancelled 后恢复 idle",
+      "doc": "打断终态后 session 回到 idle，可继续提交消息并 completed。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "O5",
+      "group": "协议观察",
+      "title": "token 有效期与 refresh 链路实测",
+      "api": "token 有效期/refresh",
+      "doc": "user_access_token 有效期较短（实测约 1 小时量级）；refresh_token 可换新 token。",
+      "verdict": "SKIPPED",
+      "summary": "未注入 DOUBBAO_USER_TOKEN 且 .tokens/ 无 token 文件",
+      "checks": [],
+      "evidence": [],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.875Z"
+    },
+    {
+      "id": "O6",
+      "group": "协议观察",
+      "title": "PPE 与线上同用例差异",
+      "api": "PPE/线上差异",
+      "doc": "破坏性与边界用例只在 PPE 执行；线上差异需另行受控验证。",
+      "verdict": "PASS",
+      "summary": "env=ppe；差异对比留待真机双环境受控运行",
+      "checks": [
+        {
+          "name": "当前运行环境",
+          "ok": true,
+          "severity": "fail",
+          "expected": "ppe（破坏性/边界用例仅在此环境）",
+          "actual": "ppe"
+        }
+      ],
+      "evidence": [
+        {
+          "label": "note",
+          "at": "2026-10-13T11:26:37.876Z",
+          "data": {
+            "note": "线上（open.doubao.com）未运行破坏性用例；如需对比请设置 DOUBBAO_ENV=online 并仅跑非破坏性用例。"
+          }
+        }
+      ],
+      "durationMs": 0,
+      "at": "2026-10-13T11:26:37.876Z"
+    }
+  ]
+}

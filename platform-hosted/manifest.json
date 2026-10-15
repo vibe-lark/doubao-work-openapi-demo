@@ -1,0 +1,14 @@
+{
+  "teamVisible": true,
+  "name": "豆包工作 Open API 能力展示台",
+  "appName": "豆包工作 Open API 能力展示台",
+  "icon": "icon.svg",
+  "description": {
+    "zh-cn": "用真实请求验证豆包工作 Open API 的会话、消息、流式、文件与边界行为。",
+    "en-us": "A real-request console for Doubao Work Open API sessions, messages, streams, files and boundaries."
+  },
+  "accent": "#0066FF",
+  "capabilities": [],
+  "manifestVersion": "0.1",
+  "kitVersion": 1
+}

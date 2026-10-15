@@ -1,0 +1,118 @@
+/* lark-ud.css — OPTIONAL skin: Lark / Feishu UD visual language mapped onto the exact same shadcn
+   semantic tokens neutral.css defines. Drop-in replacement — in styles.css change
+   `@import "./themes/neutral.css";` to `@import "./themes/lark-ud.css";` and nothing else moves.
+
+   Mapping (Lark UD token -> shadcn semantic):
+     accent #7c3aed            -> --primary / --ring / --sidebar-primary  (the one brand color)
+     ink #1f2329               -> --foreground / *-foreground on light surfaces
+     ink-2 #646a73             -> --muted-foreground
+     surface #fff              -> --background / --card / --popover
+     surface-sunken #f2f3f5    -> --muted / --secondary
+     accent-weak (8% purple)   -> --accent (subtle brand-tinted hover fill)
+     line #dee0e3              -> --border / --input
+     danger #f54a45            -> --destructive
+   Radius is Lark's 4px grid: --radius 0.5rem => radius-lg 8px / md 6px / sm 4px via the calc bridge
+   in styles.css. Charts use a Lark-friendly categorical ramp (purple/blue/green/orange/teal).
+   Dark set is derived to Lark dark aesthetics (no official token dump exists).
+
+   Polish layer (every skin must define the same extra tokens — see neutral.css for rationale):
+   --background PURE WHITE (the embedding host container is white; any page tint reads as a hard
+   boundary around the App — cards separate via border + shadow instead), --ring: var(--primary) so
+   focus follows the App's brand override, --faint / --border-strong text+border levels, two-layer
+   --shadow-* set with a heavier dark variant, and --scrollbar-thumb for themed thin scrollbars. */
+
+:root {
+  --radius: 0.5rem;
+
+  --background: #ffffff;
+  --foreground: #1f2329;
+  --card: #ffffff;
+  --card-foreground: #1f2329;
+  --popover: #ffffff;
+  --popover-foreground: #1f2329;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f3f5;
+  --secondary-foreground: #1f2329;
+  --muted: #f2f3f5;
+  --muted-foreground: #646a73;
+  --accent: rgba(124, 58, 237, 0.08);
+  --accent-foreground: #6b2bd9;
+  --destructive: #f54a45;
+  --border: #dee0e3;
+  --input: #dee0e3;
+  --ring: var(--primary);
+  --faint: #8f959e;
+  --border-strong: #cdd0d4;
+
+  --shadow-2xs: 0 1px 2px rgb(31 35 41 / 0.04);
+  --shadow-xs: 0 1px 2px rgb(31 35 41 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(31 35 41 / 0.05), 0 2px 8px -1px rgb(31 35 41 / 0.05);
+  --shadow-md: 0 2px 4px rgb(31 35 41 / 0.05), 0 10px 28px -4px rgb(31 35 41 / 0.1);
+  --shadow-lg: 0 4px 8px rgb(31 35 41 / 0.06), 0 18px 44px -8px rgb(31 35 41 / 0.13);
+  --shadow-xl: 0 8px 16px rgb(31 35 41 / 0.07), 0 28px 64px -12px rgb(31 35 41 / 0.16);
+  --shadow-2xl: 0 12px 24px rgb(31 35 41 / 0.09), 0 40px 96px -16px rgb(31 35 41 / 0.2);
+  --scrollbar-thumb: rgb(31 35 41 / 0.18);
+
+  --chart-1: #7c3aed;
+  --chart-2: #3370ff;
+  --chart-3: #35bd4b;
+  --chart-4: #ff8f1f;
+  --chart-5: #14b8c4;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2329;
+  --sidebar-primary: #7c3aed;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(124, 58, 237, 0.08);
+  --sidebar-accent-foreground: #6b2bd9;
+  --sidebar-border: #dee0e3;
+  --sidebar-ring: #7c3aed;
+}
+
+.dark {
+  --background: #1a1a1e;
+  --foreground: #ebebeb;
+  --card: #232328;
+  --card-foreground: #ebebeb;
+  --popover: #232328;
+  --popover-foreground: #ebebeb;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: #2b2b31;
+  --secondary-foreground: #ebebeb;
+  --muted: #2b2b31;
+  --muted-foreground: #9b9ba3;
+  --accent: rgba(139, 92, 246, 0.18);
+  --accent-foreground: #c4b5fd;
+  --destructive: #f76964;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: var(--primary);
+  --faint: #6f7076;
+  --border-strong: rgba(255, 255, 255, 0.2);
+
+  --shadow-2xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35), 0 2px 8px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 4px 8px rgb(0 0 0 / 0.4), 0 20px 48px -8px rgb(0 0 0 / 0.55);
+  --shadow-xl: 0 8px 16px rgb(0 0 0 / 0.45), 0 28px 64px -12px rgb(0 0 0 / 0.6);
+  --shadow-2xl: 0 12px 24px rgb(0 0 0 / 0.5), 0 40px 96px -16px rgb(0 0 0 / 0.65);
+  --scrollbar-thumb: rgb(255 255 255 / 0.16);
+
+  --chart-1: #a78bfa;
+  --chart-2: #5b8cff;
+  --chart-3: #4ade80;
+  --chart-4: #fbbf24;
+  --chart-5: #2dd4bf;
+
+  --sidebar: #202024;
+  --sidebar-foreground: #ebebeb;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(139, 92, 246, 0.18);
+  --sidebar-accent-foreground: #c4b5fd;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: #8b5cf6;
+}

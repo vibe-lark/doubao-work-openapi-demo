@@ -1,0 +1,22 @@
+# 依赖与构建中间产物（web/dist 是交付物，不忽略！）
+node_modules/
+web/node_modules/
+.DS_Store
+*.log
+
+# 密钥与令牌：绝不入库
+.env
+.env.*
+!.env.example
+.tokens/
+token*.json
+
+# 报告中可能的未脱敏临时文件（正式脱敏报告正常入库）
+reports/tmp/
+reports/*.raw.*
+reports/*.local.*
+
+# 平台/编辑器
+.output/
+_mino_publish.json
+.app-versions*

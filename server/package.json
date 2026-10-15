@@ -1,0 +1,14 @@
+{
+  "name": "doubao-work-openapi-node-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "豆包工作 Open API 能力展示台 · 独立 Node 版后端（Node 18+ 零运行时依赖）",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}
