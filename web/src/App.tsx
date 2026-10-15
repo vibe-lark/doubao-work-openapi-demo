@@ -13,43 +13,22 @@ import EmbedDemo from "./EmbedDemo";
 
 function BoundaryView() {
   const [selected, setSelected] = useState<Group>("sessions");
-  const group = groups.find((group) => group.id === selected)!;
   return (
     <>
-      <div className="section-heading api-heading">
-        <div>
-          <p className="eyebrow">OPEN API REFERENCE</p>
-          <h1>接口列表说明</h1>
-          <p>按工作流程查看接口用途、使用边界与验证依据。</p>
-        </div>
-      </div>
-      <section className="catalog" aria-labelledby="catalog-title">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">CAPABILITIES</p>
-            <h2 id="catalog-title">接口能力与边界</h2>
-          </div>
-          <span className="muted">10 项业务接口 · 1 项暂缓接口</span>
-        </div>
+      <section className="catalog" aria-label="接口列表说明">
         <div className="group-buttons" aria-label="能力分类">
-          {groups.map((item, index) => (
+          {groups.map((item) => (
             <button
               key={item.id}
               className={selected === item.id ? "group active" : "group"}
               aria-pressed={selected === item.id}
               onClick={() => setSelected(item.id)}
             >
-              <span className="group-number">0{index + 1}</span>
               <span>
                 <strong>{item.title}</strong>
-                <small>{item.subtitle}</small>
               </span>
             </button>
           ))}
-        </div>
-        <div className="group-intro">
-          <h3>{group.title}</h3>
-          <p>{group.description}</p>
         </div>
         {selected === "access" ? (
           <AccessBoundaries />
@@ -65,7 +44,9 @@ function BoundaryView() {
                       <span className={`badge ${item.deferred ? "warn" : ""}`}>
                         {item.deferred
                           ? "暂缓开放"
-                          : ["create", "event", "messages"].includes(item.id)
+                          : ["create", "list", "event", "messages"].includes(
+                                item.id,
+                              )
                             ? "基础链路已实测"
                             : "文档定义 · 待实测"}
                       </span>
@@ -77,10 +58,12 @@ function BoundaryView() {
                     <span className="details-label">查看边界</span>
                   </summary>
                   <div className="cap-body">
-                    {["create", "event", "messages"].includes(item.id) && (
+                    {["create", "list", "event", "messages"].includes(
+                      item.id,
+                    ) && (
                       <p className="live-proof">
                         2026-10-15
-                        正式环境：已验证创建会话、携带记录提问、同会话追问及停止回复。仅证明本次基础链路；下方历史边界用例仍保留原结论。
+                        正式环境：已验证会话列表、历史回读、连续对话、业务任务及停止回复。下方历史边界用例仍保留原结论。
                       </p>
                     )}
                     <div className="boundary-copy">
@@ -135,8 +118,8 @@ function BoundaryView() {
           </>
         )}
       </section>
-      <aside className="evidence-note">
-        <strong>验证范围保持透明</strong>
+      <details className="evidence-note">
+        <summary>验证记录与范围</summary>
         <p>
           仓库历史报告（2026-10-13，PPE）：{evidence.counts.PASS}{" "}
           项环境配置观察通过、{evidence.counts.MISMATCH} 项鉴权文档差异、
@@ -160,7 +143,7 @@ function BoundaryView() {
         >
           查看原始报告
         </a>
-      </aside>
+      </details>
     </>
   );
 }
@@ -277,44 +260,9 @@ export default function App() {
           <span>开放能力体验</span>
         </header>
         <main className="login-layout">
-          <section className="login-story">
-            <p className="eyebrow">DOUBAO WORK / OPEN API</p>
-            <h1>
-              从一句话，
-              <br />
-              到你的业务系统。
-            </h1>
-            <p>
-              连接飞书身份，体验豆包工作如何理解问题、完成任务，并融入日常工作。
-            </p>
-            <ol>
-              <li>
-                <span>01</span>
-                <div>
-                  <h3>Playground</h3>
-                  <p>直接对话，体验连续追问。</p>
-                </div>
-              </li>
-              <li>
-                <span>02</span>
-                <div>
-                  <h3>系统集成</h3>
-                  <p>在模拟商机系统中使用豆包侧栏。</p>
-                </div>
-              </li>
-              <li>
-                <span>03</span>
-                <div>
-                  <h3>接口列表说明</h3>
-                  <p>了解能力范围、接口边界与验证依据。</p>
-                </div>
-              </li>
-            </ol>
-          </section>
           <section className="login-card" aria-labelledby="login-title">
-            <p className="eyebrow">WELCOME</p>
             <h2 id="login-title">登录开放能力体验</h2>
-            <p>使用你的飞书账号安全登录。</p>
+            <p>Playground · 系统集成 · 接口说明</p>
             {status?.configured ? (
               <a
                 className="button dark sso-login"
@@ -333,14 +281,6 @@ export default function App() {
                 回调地址后重启服务。
               </p>
             )}
-            <p className="login-help">
-              已有飞书登录态可用于身份确认。首次使用或授权过期时，飞书会提示确认授权。
-            </p>
-            {status && (
-              <span className="badge">
-                {status.environment === "online" ? "正式环境" : "PPE 联调环境"}
-              </span>
-            )}
             {error && (
               <p className="error" role="alert">
                 {error}
@@ -349,9 +289,6 @@ export default function App() {
             <button className="login-retry" onClick={refresh}>
               刷新登录状态
             </button>
-            <p className="login-privacy">
-              登录状态仅关联当前浏览器；退出后将撤销本应用会话，不影响飞书账号本身。
-            </p>
           </section>
         </main>
       </div>
@@ -408,13 +345,16 @@ export default function App() {
           <button onClick={refresh}>重试</button>
         </p>
       )}
-      <main id="main" tabIndex={-1}>
+      <main
+        id="main"
+        className={view === "api" ? "api-main" : "workspace-main"}
+        tabIndex={-1}
+      >
         <div hidden={view !== "playground"}>
           <EmbedDemo
             key={`playground-${status.account.id}`}
             variant="playground"
             status={status}
-            onConnect={refresh}
           />
         </div>
         <div hidden={view !== "integration"}>
@@ -422,18 +362,10 @@ export default function App() {
             key={`integration-${status.account.id}`}
             variant="integration"
             status={status}
-            onConnect={refresh}
           />
         </div>
         {view === "api" && <BoundaryView />}
       </main>
-      <footer>
-        <span>豆包工作 · Open API Demo</span>
-        <span>
-          {status.environment === "online" ? "正式环境" : "PPE 联调环境"} ·
-          已通过飞书 SSO 登录
-        </span>
-      </footer>
     </>
   );
 }

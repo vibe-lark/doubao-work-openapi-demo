@@ -161,3 +161,150 @@ test("observed Markdown table renders within an overflow container and HTML stay
     rmSync(folder, { recursive: true, force: true });
   }
 });
+
+const conversations = await import(
+  `data:text/javascript;base64,${Buffer.from(compile("conversations.ts").replace('"./api"', JSON.stringify(`data:text/javascript;base64,${Buffer.from(compile("api.ts")).toString("base64")}`))).toString("base64")}`
+);
+const business = await import(
+  `data:text/javascript;base64,${Buffer.from(compile("business.ts")).toString("base64")}`
+);
+
+test("upgrading single-chat history keeps pending UUIDs and separates cloud sessions", () => {
+  const legacy = [
+    {
+      id: "request-a",
+      question: "A",
+      source: "live",
+      status: "in_progress",
+      sessionId: "cloud-a",
+      queryId: "query-a",
+    },
+    {
+      id: "request-b",
+      question: "B",
+      source: "live",
+      status: "submitting",
+      sessionId: "cloud-b",
+    },
+    { id: "example", question: "fake", source: "example", status: "completed" },
+  ];
+  const restored = conversations.restoreWorkspace(legacy);
+  assert.equal(restored.conversations.length, 2);
+  assert.equal(restored.conversations[0].turns[0].queryId, "query-a");
+  assert.equal(restored.conversations[1].turns[0].id, "request-b");
+  assert.deepEqual(
+    conversations.restoreWorkspace(JSON.parse(JSON.stringify(restored))),
+    restored,
+  );
+});
+
+test("refreshing the cloud list never overwrites local pending work or imports other product chats", () => {
+  const local = [
+    {
+      id: "local-a",
+      sessionId: "cloud-a",
+      title: "A",
+      turns: [{ id: "pending" }],
+      loaded: true,
+    },
+  ];
+  const cloud = [
+    { id: "cloud-a", name: "Playground · A" },
+    { id: "cloud-b", name: "Playground · B" },
+    { id: "crm", name: "系统集成 · 检查记录" },
+    { id: "personal", name: "个人对话" },
+  ];
+  const merged = conversations.mergeRemote(local, cloud);
+  assert.equal(merged.length, 2);
+  assert.equal(merged[0], local[0]);
+  assert.equal(merged[1].loaded, false);
+  assert.equal(conversations.mergeRemote(merged, cloud).length, 2);
+});
+
+test("history pairs each user message with its own reply even when assistant replies are interleaved", () => {
+  const restored = conversations.turnsFromMessages(
+    [
+      { id: "q1", role: "user", items: [{ type: "text", text: "first" }] },
+      { id: "q2", role: "user", items: [{ type: "text", text: "second" }] },
+      {
+        id: "a2",
+        role: "assistant",
+        reply_id: "q2",
+        status: "in_progress",
+        items: [{ type: "text", text: "answer two" }],
+      },
+      {
+        id: "a1",
+        role: "assistant",
+        reply_id: "q1",
+        status: "completed",
+        items: [{ type: "text", text: "answer one" }],
+      },
+    ],
+    "session",
+  );
+  assert.equal(restored[0].answer, "answer one");
+  assert.equal(restored[1].answer, "answer two");
+  assert.equal(conversations.pendingTurn(restored).queryId, "q2");
+  assert.ok(restored.every((t) => t.sessionId === "session"));
+});
+
+test("business actions include only their intended context and preserve uncertain facts", () => {
+  const contexts = business.actions.map((action) =>
+    JSON.parse(
+      business
+        .buildTask(action)
+        .split("<business_context>\n")[1]
+        .split("\n</business_context>")[0],
+    ),
+  );
+  assert.ok(
+    contexts.every(
+      (c) =>
+        c.opportunity.customer === "云舟科技" &&
+        c.followup.text === business.record,
+    ),
+  );
+  assert.equal(contexts[0].nextVisit, undefined);
+  assert.equal(contexts[0].expectedClose, undefined);
+  assert.deepEqual(contexts[1].nextVisit, business.visit);
+  assert.equal(contexts[2].nextVisit, undefined);
+  assert.match(contexts[2].expectedClose, /客户未确认/);
+  assert.equal(new Set(business.actions.map(business.buildTask)).size, 3);
+});
+
+test("a list refresh racing a create response keeps one conversation and the original request", () => {
+  const workspace = {
+    version: 2,
+    activeId: "remote",
+    conversations: [
+      {
+        id: "local",
+        title: "local request",
+        turns: [{ id: "stable-uuid" }],
+        loaded: true,
+      },
+      {
+        id: "remote",
+        title: "cloud stub",
+        sessionId: "new-cloud",
+        turns: [],
+        loaded: false,
+      },
+    ],
+  };
+  const next = conversations.updateConversation(workspace, "local", {
+    sessionId: "new-cloud",
+  });
+  assert.equal(next.conversations.length, 1);
+  assert.equal(next.activeId, "local");
+  assert.equal(next.conversations[0].turns[0].id, "stable-uuid");
+  // A late history response for the removed stub must not remove the real chat.
+  assert.equal(
+    conversations.updateConversation(next, "remote", {
+      sessionId: "new-cloud",
+      turns: [],
+    }),
+    next,
+  );
+});

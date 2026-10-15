@@ -2,11 +2,11 @@
 
 通过飞书 SSO 登录后，进入三个 Tab：
 
-- **Playground**：直接与豆包工作对话，支持连续追问、新建对话、查看进度与停止回复。
-- **系统集成**：模拟商机系统中的豆包侧栏，选择业务记录作为上下文。默认真实调用，也可切换明确标注的预置示例。
+- **Playground**：左侧云端对话列表，支持新建、切换、读取历史和连续追问；切换不会中断正在生成的回复。
+- **系统集成**：模拟商机系统里的「检查记录」「准备拜访」「分析风险」按钮，点击即自动拼接对应上下文并发起真实任务，结果在右侧显示。
 - **接口列表说明**：按会话、消息、文件与接入边界展示 11 个接口，展开查看用途、限制和验证证据。
 
-登录后显示飞书返回的真实姓名和头像。每个浏览器通过独立 HttpOnly Cookie 关联服务端令牌；无登录会话的业务 API 返回 401。退出只撤销当前浏览器登录，不退出飞书账号，也不影响其他浏览器。详细验收见 [SSO 与三 Tab 验证](docs/SSO-TABS.md)。
+登录后显示飞书返回的真实姓名和头像。每个浏览器通过独立 HttpOnly Cookie 关联服务端令牌；无登录会话的业务 API 返回 401。退出只撤销当前浏览器登录，不退出飞书账号，也不影响其他浏览器。验收见 [SSO 与三 Tab 验证](docs/SSO-TABS.md) 和 [对话列表与业务按钮](docs/WORKSPACE.md)。
 
 沿用豆包工作浅蓝 `#CAE4FF`、黑白、系统字体与官方 Logo。主应用仅依赖 React / React DOM，不再包含通用调试台、文件工作台和边界批量运行界面。
 
@@ -38,8 +38,8 @@ OAUTH_CLIENT_ID=cli_xxx OAUTH_CLIENT_SECRET=xxx ENV=ppe node server/server.js
 ## 演示路径
 
 1. 点击「使用飞书 SSO 登录」，确认账号，返回之前选择的 Tab。
-2. 在 Playground 输入问题并连续追问，或新建一个空白对话。
-3. 切换「系统集成」，选择业务记录并在侧栏分析；两处对话上下文互不混用。
+2. 在 Playground 左侧新建或选择云端对话，读取历史并继续追问。
+3. 切换「系统集成」，点击业务区的三个任务按钮。每次点击创建独立任务，自动附加对应上下文；侧栏可查看上下文、切换任务并继续追问。
 4. 切换「接口列表说明」，展开接口查看边界与测试依据。
 5. 点击右上角「退出登录」，撤销本浏览器登录；再次访问会回到登录页。
 
@@ -52,7 +52,10 @@ OAUTH_CLIENT_ID=cli_xxx OAUTH_CLIENT_SECRET=xxx ENV=ppe node server/server.js
 ```text
 web/src/App.tsx        SSO 登录页、用户信息与三个 Tab
 web/src/catalog.ts    11 个接口及历史测试映射
-web/src/EmbedDemo.tsx  共用对话逻辑：Playground 与业务侧栏
+web/src/EmbedDemo.tsx  云端对话列表、工作区与业务入口
+web/src/ChatPanel.tsx  独立会话的发送、轮询、追问与停止
+web/src/conversations.ts  历史迁移、消息匹配和会话列表合并
+web/src/business.ts    三项业务任务与上下文组装
 web/src/api.ts        HTTP 客户端与回复匹配
 web/src/styles.css    豆包视觉与响应式布局
 server/               浏览器会话、飞书 SSO、Node BFF、SSE 与上传代理
