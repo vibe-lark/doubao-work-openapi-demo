@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "node --test ../test/sidepanel.test.mjs ../test/sso.test.mjs"
+    "test": "node --test ../test/sidepanel.test.mjs ../test/sso.test.mjs",
+    "check:secrets": "node ../scripts/check-secrets.mjs",
+    "prebuild": "npm run check:secrets"
   },
   "dependencies": {
     "react": "19.2.7",

@@ -1138,3 +1138,54 @@ footer {
     transition: none !important;
   }
 }
+
+/* AI operations share one accent; ordinary navigation stays neutral. */
+:root {
+  --ai-color: #6941c6;
+  --ai-hover: #5330a4;
+  --ai-tint: #f4f0ff;
+}
+.ai-action {
+  color: var(--ai-color);
+  background: var(--ai-tint);
+  border-color: #ded3f6;
+}
+.ai-action:hover {
+  color: var(--ai-hover);
+  background: #ebe3ff;
+  border-color: #c8b5ed;
+}
+.ai-primary {
+  color: #fff;
+  background: var(--ai-color);
+  border-color: var(--ai-color);
+}
+.ai-primary:hover {
+  background: var(--ai-hover);
+  border-color: var(--ai-hover);
+}
+.ai-action:focus-visible,
+.ai-primary:focus-visible {
+  outline-color: var(--ai-color);
+}
+.integration-rail .chat-heading h2,
+.answer > strong {
+  color: var(--ai-color);
+}
+.conversation-count {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  margin-left: 4px;
+}
+.conversation-search {
+  width: calc(100% - 8px);
+  margin: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 36px;
+  padding: 6px 12px;
+  background: #fff;
+  color: #1f2329;
+  font-size: 13px;
+}

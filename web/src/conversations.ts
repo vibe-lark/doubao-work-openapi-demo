@@ -135,14 +135,18 @@ export function mergeRemote(
 ): Conversation[] {
   const seen = new Set(conversations.map((c) => c.sessionId));
   const added = sessions
-    .filter((s) => /^Playground(?: · | 对话$)/.test(s.name) && !seen.has(s.id))
+    .filter((s) => {
+      if (!s.id || seen.has(s.id)) return false;
+      seen.add(s.id);
+      return true;
+    })
     .map((s) => ({
       id: `remote-${s.id}`,
       sessionId: s.id,
-      title: s.name.replace(/^Playground · /, ""),
+      title: s.name || "未命名对话",
       turns: [],
       loaded: false,
       updatedAt: Date.parse(s.updated_at || "") || 0,
     }));
-  return [...conversations, ...added];
+  return [...conversations, ...added].sort((a, b) => b.updatedAt - a.updatedAt);
 }

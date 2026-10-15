@@ -198,7 +198,7 @@ test("upgrading single-chat history keeps pending UUIDs and separates cloud sess
   );
 });
 
-test("refreshing the cloud list never overwrites local pending work or imports other product chats", () => {
+test("the full cloud list includes personal and business chats without overwriting pending work", () => {
   const local = [
     {
       id: "local-a",
@@ -215,10 +215,12 @@ test("refreshing the cloud list never overwrites local pending work or imports o
     { id: "personal", name: "个人对话" },
   ];
   const merged = conversations.mergeRemote(local, cloud);
-  assert.equal(merged.length, 2);
+  assert.equal(merged.length, 4);
   assert.equal(merged[0], local[0]);
   assert.equal(merged[1].loaded, false);
-  assert.equal(conversations.mergeRemote(merged, cloud).length, 2);
+  assert.equal(conversations.mergeRemote(merged, cloud).length, 4);
+  assert.ok(merged.some((c) => c.sessionId === "personal"));
+  assert.ok(merged.some((c) => c.sessionId === "crm"));
 });
 
 test("history pairs each user message with its own reply even when assistant replies are interleaved", () => {

@@ -42,12 +42,20 @@ export default function EmbedDemo({
     isPlayground || workspace.conversations.some((c) => c.turns.length),
   );
   const [mobileList, setMobileList] = useState(false);
+  const [search, setSearch] = useState("");
   const [listError, setListError] = useState("");
   const [storageError, setStorageError] = useState("");
   const [historyError, setHistoryError] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [pageToken, setPageToken] = useState<string | undefined>();
   const listBusy = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const loadingHistory = useRef(new Set<string>());
   const actionLock = useRef(false);
   const rail = useRef<HTMLElement>(null);
@@ -71,17 +79,33 @@ export default function EmbedDemo({
     listBusy.current = true;
     setLoading(true);
     setListError("");
+    let cursor = token;
+    const seen = new Set<string>();
+    if (token) seen.add(token);
     try {
-      const data = await proxy(
-        `/api/sessions?page_size=50&order=desc${token ? `&page_token=${encodeURIComponent(token)}` : ""}`,
-      );
-      setWorkspace((previous) => ({
-        ...previous,
-        conversations: mergeRemote(previous.conversations, data.sessions || []),
-      }));
-      setPageToken(data.has_more ? data.page_token : undefined);
+      do {
+        const data = await proxy(
+          `/api/sessions?page_size=50&order=desc${cursor ? `&page_token=${encodeURIComponent(cursor)}` : ""}`,
+        );
+        if (!mounted.current) return;
+        setWorkspace((previous) => ({
+          ...previous,
+          conversations: mergeRemote(
+            previous.conversations,
+            data.sessions || [],
+          ),
+        }));
+        if (data.has_more && (!data.page_token || seen.has(data.page_token)))
+          throw new Error("会话分页未完整返回，请刷新重试");
+        cursor = data.has_more ? data.page_token : undefined;
+        setPageToken(cursor);
+        if (cursor) seen.add(cursor);
+      } while (cursor && mounted.current);
     } catch (e) {
-      setListError(e instanceof Error ? e.message : "读取对话失败");
+      if (mounted.current) {
+        setPageToken(cursor);
+        setListError(e instanceof Error ? e.message : "读取对话失败");
+      }
     } finally {
       listBusy.current = false;
       setLoading(false);
@@ -207,7 +231,12 @@ export default function EmbedDemo({
             aria-label="对话列表"
           >
             <div className="list-heading">
-              <h2>对话</h2>
+              <h2>
+                全部对话{" "}
+                <small className="conversation-count">
+                  {workspace.conversations.filter((c) => c.sessionId).length}
+                </small>
+              </h2>
               <button
                 className="text-button"
                 onClick={() => loadList()}
@@ -219,32 +248,41 @@ export default function EmbedDemo({
             <button className="new-conversation" onClick={createChat}>
               新建对话
             </button>
+            <input
+              className="conversation-search"
+              type="search"
+              aria-label="搜索对话"
+              placeholder="搜索对话"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
             <div className="chat-items">
-              {workspace.conversations.map((chat) => (
-                <button
-                  key={chat.id}
-                  className="chat-list-item"
-                  aria-current={chat.id === active.id ? "true" : undefined}
-                  onClick={() => select(chat)}
-                  title={chat.title}
-                >
-                  <span>{chat.title}</span>
-                  {pendingTurn(chat.turns) && <small>处理中</small>}
-                </button>
-              ))}
+              {workspace.conversations
+                .filter((chat) =>
+                  chat.title
+                    .toLowerCase()
+                    .includes(search.trim().toLowerCase()),
+                )
+                .map((chat) => (
+                  <button
+                    key={chat.id}
+                    className="chat-list-item"
+                    aria-current={chat.id === active.id ? "true" : undefined}
+                    onClick={() => select(chat)}
+                    title={chat.title}
+                  >
+                    <span>{chat.title}</span>
+                    {pendingTurn(chat.turns) && <small>处理中</small>}
+                  </button>
+                ))}
+              {search &&
+                !workspace.conversations.some((chat) =>
+                  chat.title
+                    .toLowerCase()
+                    .includes(search.trim().toLowerCase()),
+                ) && <p className="small-text muted">没有匹配的对话</p>}
             </div>
-            {pageToken && (
-              <button
-                className="text-button"
-                disabled={loading}
-                onClick={() => loadList(pageToken)}
-              >
-                {loading ? "加载中…" : "加载更早对话"}
-              </button>
-            )}
-            {loading && !pageToken && (
-              <p className="muted small-text">加载中…</p>
-            )}
+            {loading && <p className="muted small-text">正在加载全部对话…</p>}
             {listError && (
               <p className="error" role="alert">
                 {listError}
@@ -293,7 +331,7 @@ export default function EmbedDemo({
               <span>客户 / {opportunity.customer}</span>
               <span className="badge">模拟业务系统</span>
               <button
-                className="text-button"
+                className="text-button ai-action"
                 onClick={() => (open ? setOpen(false) : showRail())}
               >
                 {open ? "收起豆包" : "打开豆包"}
@@ -304,7 +342,9 @@ export default function EmbedDemo({
                 <h1>{opportunity.name}</h1>
                 <p>{opportunity.customer}</p>
               </div>
-              <button onClick={() => launch(actions[2])}>分析风险</button>
+              <button className="ai-action" onClick={() => launch(actions[2])}>
+                分析风险
+              </button>
             </div>
             <dl className="crm-fields">
               <div>
@@ -327,7 +367,12 @@ export default function EmbedDemo({
             <section className="crm-section">
               <div className="crm-section-heading">
                 <h2>最近跟进</h2>
-                <button onClick={() => launch(actions[0])}>检查记录</button>
+                <button
+                  className="ai-action"
+                  onClick={() => launch(actions[0])}
+                >
+                  检查记录
+                </button>
               </div>
               <p className="record-meta">10 月 12 日 · 陈晓</p>
               <p className="record-text">{record}</p>
@@ -335,7 +380,12 @@ export default function EmbedDemo({
             <section className="crm-section">
               <div className="crm-section-heading">
                 <h2>下次拜访</h2>
-                <button onClick={() => launch(actions[1])}>准备拜访</button>
+                <button
+                  className="ai-action"
+                  onClick={() => launch(actions[1])}
+                >
+                  准备拜访
+                </button>
               </div>
               <p className="record-meta">
                 {visit.date} · {visit.contact}

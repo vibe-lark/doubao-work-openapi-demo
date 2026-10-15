@@ -240,7 +240,7 @@ export default function ChatPanel({
             </button>
           ) : (
             <button
-              className="dark"
+              className="ai-primary"
               type="submit"
               disabled={busy || !prompt.trim()}
             >
