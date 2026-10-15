@@ -2,6 +2,8 @@ export type Connection = {
   connected: boolean;
   environment: "ppe" | "online";
   configured: boolean;
+  account: { id: string; name: string; avatar: string | null } | null;
+  expiresAt: number | null;
 };
 export type Message = {
   id: string;
@@ -19,11 +21,15 @@ export async function request(path: string, body?: unknown) {
   const response = await fetch(path, {
     method: body === undefined ? "GET" : "POST",
     headers:
-      body === undefined ? undefined : { "Content-Type": "application/json" },
+      body === undefined
+        ? undefined
+        : { "Content-Type": "application/json", "X-Doubao-Request": "1" },
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(25000),
   });
   const data = await response.json();
+  if (response.status === 401 && typeof window !== "undefined")
+    window.dispatchEvent(new Event("doubao:login-required"));
   if (!response.ok)
     throw new Error(
       data.error?.message || data.msg || `请求失败（HTTP ${response.status}）`,
@@ -39,6 +45,8 @@ export async function connection(): Promise<Connection> {
     connected: status.connected,
     environment: status.environment,
     configured: config.oauthConfigured,
+    account: status.account || null,
+    expiresAt: status.expiresAt || null,
   };
 }
 export async function proxy(path: string, body?: unknown) {

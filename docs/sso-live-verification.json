@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-15",
+  "environment": "online",
+  "identityProvider": "Feishu OAuth and authen/v1/user_info",
+  "realBrowserChecks": {
+    "verifiedProfilePresent": true,
+    "loginSurvivesReload": true,
+    "sessionCookieReadableByJavaScript": false,
+    "anonymousBusinessApiStatus": 401,
+    "businessApiStatusAfterLogout": 401,
+    "logoutSurvivesReload": true,
+    "localConversationClearedOnLogout": true,
+    "reloginReturnedTo": "#integration"
+  },
+  "conversations": [
+    {
+      "tab": "playground",
+      "sessionId": "38447178800617218",
+      "businessContextAttached": false,
+      "turns": [
+        { "queryId": "58602848197052674", "status": "completed", "answer": "已记住蓝鲸。" },
+        { "queryId": "58602422266736642", "status": "completed", "answer": "蓝鲸" }
+      ]
+    },
+    {
+      "tab": "integration",
+      "sessionId": "38447178676055042",
+      "businessContextAttached": true,
+      "turns": [
+        { "queryId": "58605032284957442", "status": "completed", "answer": "客户名称为云舟科技，预算尚未正式确认（记录仅为\"预算应该没问题\"的主观判断，客户方仍需内部沟通）。" }
+      ]
+    }
+  ],
+  "responsiveChecks": {
+    "widths": [390, 768, 1512],
+    "tabs": ["playground", "integration", "api"],
+    "pageHorizontalOverflow": false
+  },
+  "automatedTests": { "passed": 8, "failed": 0, "providerIsolationTest": "synthetic identities through the real HTTP server" },
+  "limitations": ["No real second-account upstream isolation test", "No enterprise IdP/SAML integration", "No public deployment", "Historical skipped API boundary cases remain unverified"],
+  "redaction": "No authorization codes, cookies, tokens, user identifiers, names or avatar URLs recorded. Business data is fictional."
+}
