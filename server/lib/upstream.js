@@ -56,7 +56,7 @@ export async function getValidAccessToken(environment) {
   const refreshed = await refreshAccessToken(environment);
   if (refreshed?.token) return refreshed.token.accessToken;
   // 刷新失败时保留旧 token（可能仍有少量宽限期）；业务侧会收到真实网关错误，不再静默。
-  return token.accessToken;
+  return token.expiresAt > Date.now() ? token.accessToken : null;
 }
 
 function extract(payload) {

@@ -1,158 +1,93 @@
-# 豆包工作 Open API Demo · 能力展示台（独立 Node 版）
+# 豆包工作 Open API · SSO 与三 Tab 体验
 
-用真实请求验证 [豆包工作（Doubao Work）Open API](https://open.doubao.com/open-apis/agent) 的交付级开源工程：
+通过飞书 SSO 登录后，进入三个 Tab：
 
-- **独立 Node 后端**：Node 18+ **零运行时依赖**，`node server/server.js` 直接起；
-- **React 前端**：源码在 `web/`，构建产物 `web/dist/` 已提交，**clone 即可用、免构建**；
-- **全量测试套件**：`node test/run.js`，零依赖 runner，47 条用例覆盖 11 个接口的端到端链路、边界矩阵与协议观察；
-- **双向文档**：客户排查手册（`docs/TROUBLESHOOTING.md`）+ 给豆包研发的问题登记（`docs/ISSUES.md`）+ 覆盖矩阵（`docs/API_COVERAGE.md`）。
+- **Playground**：读取当前登录用户 API 可见的全部云端对话，自动遍历分页，支持搜索、新建、切换、历史回读和连续追问。
+- **系统集成**：模拟商机系统里的「检查记录」「准备拜访」「分析风险」按钮，点击即自动拼接对应上下文并发起真实任务，结果在右侧显示。
+- **接口列表说明**：按会话、消息、文件与接入边界展示 11 个接口，展开查看用途、限制和验证证据。
 
-页面上所有结果都来自真实接口请求；未执行的用例明确显示「SKIPPED / BLOCKED / 尚未运行」，**不用任何示意数据冒充真实响应，不编造任何测试结果**。
+登录后显示飞书返回的真实姓名和头像。每个浏览器通过独立 HttpOnly Cookie 关联服务端令牌；无登录会话的业务 API 返回 401。退出只撤销当前浏览器登录，不退出飞书账号，也不影响其他浏览器。验收见 [SSO 与三 Tab 验证](docs/SSO-TABS.md) 和 [对话列表与业务按钮](docs/WORKSPACE.md)。
 
-## 两种形态
+沿用豆包工作浅蓝 `#CAE4FF`、黑白、系统字体与官方 Logo。主应用仅依赖 React / React DOM，不再包含通用调试台、文件工作台和边界批量运行界面。
 
-| 形态 | 位置 | 适用场景 |
-| --- | --- | --- |
-| **独立 Node 版（本仓库重点）** | `server/` + `web/` + `test/` | 客户/伙伴 clone 到本机或自部署：真实 127.0.0.1 OAuth 回调、浏览器→Node→豆包的持久 SSE 管道、multipart 透传、全量测试 |
-| 平台托管 BFF 版（原始形态） | `platform-hosted/` | 在 AnyGen 类托管平台上以 actions 形式部署：无长期宿主，SSE 只能 8 秒限时读取、回调需手动粘贴 code。其 README 见该目录 |
+## 启动
 
-## 30 秒快速开始
+Node.js 18+。仓库提交了 `web/dist`，运行不需要安装前端依赖；进入应用需先配置飞书自建应用并完成 SSO 登录。
 
-前置：Node 18+（本机实测 v24；仅需全局 `fetch`/`FormData`/`Request.formData`，Node 18 起内置）。
-
-```bash
-# 1) 启动（无需 npm install）
+```sh
 node server/server.js
-
-# 2) 浏览器打开
-open http://127.0.0.1:4110
-
-# 3) 另开终端，先跑无 token 自检（B1/B2 是真实的网关鉴权探测）
-node test/run.js
+# 打开 http://127.0.0.1:4110
 ```
 
-### 配置 OAuth（要跑业务接口时）
+## 真实调用
 
-在飞书开放平台建自建应用，拿到 App ID / Secret，登记重定向 URI 为
-`http://127.0.0.1:4110/api/auth/feishu/callback`，并开通 6 个 `doubao:*` 权限：
+配置飞书自建应用，登记回调地址 `http://127.0.0.1:4110/api/auth/feishu/callback`，开通所需用户权限，然后启动：
 
-```
-doubao:session.event:write
-doubao:session.message:read
-doubao:session:write
-doubao:session:read
-doubao:session.event:read
-doubao:file:write
+```sh
+OAUTH_CLIENT_ID=cli_xxx OAUTH_CLIENT_SECRET=xxx ENV=ppe node server/server.js
 ```
 
-然后用环境变量启动（也可复制 `.env.example` 为 `.env` 自行 source；server 本身只读 `process.env`）：
+在登录页点击「使用飞书 SSO 登录」。复用已有飞书登录态完成账号确认后，服务端兑换令牌、调用 `authen/v1/user_info` 验证身份，再签发浏览器会话。用户令牌保存在被 Git 忽略的 `.tokens/sessions/`，权限为 0600；浏览器只持有不透明 HttpOnly 会话 Cookie，不接收 access/refresh token。旧版全局 `.tokens/token.json` 不会用于 HTTP 登录或业务请求。
 
-```bash
-OAUTH_CLIENT_ID=cli_xxxxxxxxxxxx \
-OAUTH_CLIENT_SECRET=xxxxxxxx \
-REDIRECT_URI=http://127.0.0.1:4110/api/auth/feishu/callback \
-PORT=4110 ENV=ppe \
-node server/server.js
+需申请的权限：`doubao:session:read`、`doubao:session:write`、`doubao:session.event:read`、`doubao:session.event:write`、`doubao:session.message:read`、`doubao:file:write`。如需自动续期，在应用开通 `offline_access` 后设置 `OAUTH_OFFLINE_ACCESS=1`。
+
+默认 `ENV=ppe` 使用 `open.feishu.cn` 并注入 PPE 头；`ENV=online` 使用 `open.doubao.com`。不要把一个环境的测试结论外推到另一个环境。
+
+`.env.example` 是配置模板，服务本身只读环境变量。Node.js 22+ 可用 `node --env-file=.env server/server.js` 加载填写后的文件。
+
+## 演示路径
+
+1. 点击「使用飞书 SSO 登录」，确认账号，返回之前选择的 Tab。
+2. 在 Playground 左侧新建或选择云端对话，读取历史并继续追问。
+3. 切换「系统集成」，点击业务区的三个任务按钮。每次点击创建独立任务，自动附加对应上下文；侧栏可查看上下文、切换任务并继续追问。
+4. 切换「接口列表说明」，展开接口查看边界与测试依据。
+5. 点击右上角「退出登录」，撤销本浏览器登录；再次访问会回到登录页。
+
+浏览器 → 同源 Node BFF → 豆包工作 API → 消息轮询 → 侧栏结果。没有本地 Agent 替代服务。侧栏使用最新 100 条消息按 `reply_id` 匹配当前 query，每 4 秒查询；仅 completed / failed / cancelled 结束观察。关闭侧栏、网络错误和页面重载不被解释为云端停止。未确认的提交使用原 uuid 找回；sessionStorage 按用户及 Playground / 系统集成分别保存本标签页任务与上下文，退出时清理当前用户的记录。停止操作提交真实 `user.interrupt` 并等待终态。
+
+此演示不自动抓取其他业务数据，不自动写回商机，不演示文件上传操作；文件能力及其限制在能力页中说明。默认监听本机地址。已实现浏览器会话和令牌隔离；公开生产部署仍需配置 HTTPS、应用可见范围和组织准入策略。
+
+## 结构
+
+```text
+web/src/App.tsx        SSO 登录页、用户信息与三个 Tab
+web/src/catalog.ts    11 个接口及历史测试映射
+web/src/EmbedDemo.tsx  云端对话列表、工作区与业务入口
+web/src/ChatPanel.tsx  独立会话的发送、轮询、追问与停止
+web/src/conversations.ts  历史迁移、消息匹配和会话列表合并
+web/src/business.ts    三项业务任务与上下文组装
+web/src/api.ts        HTTP 客户端与回复匹配
+web/src/styles.css    豆包视觉与响应式布局
+server/               浏览器会话、飞书 SSO、Node BFF、SSE 与上传代理
+test/                 原有真实 API 测试套件
+reports/              已脱敏的历史报告
+docs/                 接口覆盖、问题记录、改造与验证说明
+platform-hosted/      历史托管平台实现；不参与当前应用的构建或运行
 ```
 
-打开页面点「用飞书授权连接」：
+旧版工作台可通过 Git 历史找回。平台托管版本仍在原目录，当前改造针对独立 Node 版。
 
-- 本机浏览器：自动接住 `127.0.0.1:4110` 回调，换 token，落盘 `.tokens/`（权限 0600，已 gitignore），到期前 2 分钟自动 refresh；
-- 云端/无本机服务：授权后把地址栏的裸 `code` 或整段回调 URL 粘到首页输入框（`POST /api/auth/manual-code`）。
+## 配置检查
 
-> 令牌端点固定用新版 v3：`https://accounts.feishu.cn/oauth/v3/token`。旧版无 scope 的 user_access_token 调豆包 API 会被拒，见 [ISSUE-003](docs/ISSUES.md)。
+真实 App ID、App Secret 和令牌只保留在未入库的环境配置与 `.tokens/`。`npm run build` 会先扫描待提交文件；也可运行 `node scripts/check-secrets.mjs --staged` 检查暂存区，或加 `--history` 检查所有本地可见 Git 引用。扫描只报告文件、版本和类别，不打印命中值。检查范围和结果见 [配置审计](docs/CONFIG-AUDIT.md)。
 
-## 目录结构
+## 开发与验证
 
-```
-README.md                 本文件
-server/                   独立 Node 后端（零依赖）
-  server.js               HTTP 入口、路由、静态托管
-  lib/config.js           环境变量 / 上游域名 / OAuth v3 端点 / PPE 头
-  lib/store.js            .tokens 落盘（0600）、环境选择、OAuth state
-  lib/oauth.js            授权 URL、code 提取、code 换 token
-  lib/upstream.js         Bearer 注入、自动刷新、JSON/multipart 代理、统一证据结构
-  lib/sse.js              持久 SSE 管道（透传帧/id/Last-Event-ID、断连 abort、心跳）
-  lib/boundary.js         页面 Boundary Lab（a–k）服务端执行
-  lib/mask.js             脱敏 / curl 生成
-web/                      前端
-  src/                    React 19 + shadcn/Radix（复用自托管版）
-  src/api-shim/           @api/auth|doubao|boundary → 本地 fetch('/api/...') 适配层
-  shared/schema.ts        zod 契约（与 platform-hosted 一致）
-  dist/                   已提交的构建产物（免构建）
-test/                     零依赖全量测试
-  run.js                  runner + 报告 + 自动同步覆盖矩阵
-  http.js                 直连网关客户端 / SSE 收集 / 轮询
-  fixtures.js             本地即时生成 png/txt/pdf/空文件/大文件
-  cases-business.js       S1–S13
-  cases-boundary.js       B1–B28
-  cases-observation.js    O1–O6
-docs/
-  ISSUES.md               给豆包研发的问题登记（含真实日期与脱敏证据）
-  TROUBLESHOOTING.md      给客户/伙伴的对接排查手册
-  API_COVERAGE.md         11 接口 × 场景覆盖矩阵（末尾自动更新运行结果）
-reports/                  每次测试的脱敏 md/json 报告
-platform-hosted/          原平台托管 BFF 形态源码（适用场景见其 README）
-.env.example .gitignore LICENSE
-```
-
-## server 路由清单
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/health` | 健康检查（node 版本、环境、OAuth 是否配置、dist 是否就绪） |
-| GET | `/api/config` | 公开配置（不含密钥） |
-| GET | `/api/auth/status` | 连接状态 / 到期时间 / 环境 |
-| GET | `/api/auth/feishu` | 302 发起 v3 授权（state 写 HttpOnly cookie） |
-| POST | `/api/auth/start` | 返回授权 URL（前端弹窗式流程用），同时 Set-Cookie |
-| GET | `/api/auth/feishu/callback` | **真实承接 127.0.0.1:4110 回调**，校验 state 后换 token |
-| POST | `/api/auth/manual-code` | 粘贴裸 code / 完整回调 URL 的备用流程 |
-| POST | `/api/auth/disconnect` | 清除本地令牌 |
-| POST | `/api/environment` | 切换 ppe / online（持久化到 `.tokens/environment`） |
-| POST | `/api/boundary/run` | Boundary Lab a–k（服务端执行） |
-| POST | `/api/files` | multipart 透传 `/v1/files` |
-| POST/GET/PATCH/DELETE | `/api/sessions[/:id]` | Sessions Create/Retrieve/Update/Delete/List |
-| POST | `/api/sessions/:id/events` | Events Create（message / interrupt） |
-| GET | `/api/sessions/:id/events` | **会话级 Stream 持久 SSE 透传**（透传 `Last-Event-ID`） |
-| GET | `/api/sessions/:id/events/:messageId` | **MessageStream 持久 SSE 透传** |
-| GET | `/api/sessions/:id/messages[/:messageId]` | Messages List / Retrieve |
-| GET | `/*` | `web/dist` 静态资源 + SPA 回退 |
-
-所有 JSON 代理统一返回：`method/url/脱敏 headers/body/curl/响应/HTTP 状态/耗时`；
-SSE 代理是浏览器→Node→豆包的**持久流式管道**：原样转发 `text/event-stream` 帧与 SSE `id`、透传 `Last-Event-ID`、浏览器断开立即 abort 上游、15 秒保活心跳、错误帧传播。
-
-## 测试套件
-
-47 条用例（13 端到端 + 28 边界 + 6 协议观察）：
-
-```bash
-node test/run.js                          # 全量；无 token 时业务用例 SKIPPED，B1/B2 真实执行
-DOUBBAO_USER_TOKEN=u-xxxx node test/run.js
-node test/run.js S2 S7 O2                 # 只跑部分
-node test/run.js --group 分页
-RUN_LARGE_FILES=1 node test/run.js B26    # 101MB 用例默认跳过
-```
-
-每条记录请求 / 脱敏响应 / HTTP / code / 耗时 / 期望 / 实际 / 结论（PASS/FAIL/MISMATCH/SKIPPED/BLOCKED），
-产出 `reports/YYYYMMDD-HHmm-<env>.{md,json}` 并自动更新 `docs/API_COVERAGE.md` 末尾结果区。
-
-## 环境与安全
-
-- `ENV=ppe`（默认）走 `open.feishu.cn` 并注入 `X-Tt-Env: ppe_doubao_oapi` + `X-Use-Ppe: 1`；`ENV=online` 走 `open.doubao.com`，切线上由前端二次确认。
-- `client_secret`、access/refresh token、授权 code **绝不入库、绝不下发浏览器**；`.tokens/`、`.env` 已 gitignore；证据中的 Authorization 恒定打码，报告落盘前再做一遍模式化脱敏。
-- 破坏性 / 边界用例默认只在 PPE 跑；`429001` 只记录文档定义，不压测。
-
-## 从源码重新构建前端（可选）
-
-`web/dist` 已提交，一般不需要。要改前端：
-
-```bash
+```sh
 cd web
-npm install
-npm run dev      # 5173，/api 代理到 4110（先起 server）
-npm run build    # 产物输出到 web/dist
+npm ci
+npm run dev         # Vite /api 代理到 4110
+npm run build       # 严格 TypeScript 检查与生产构建
+npm test            # 对话及 SSO 隔离/退出/重启回归测试
 ```
 
-## License
+原接口套件 `node test/run.js` 是独立 CLI，会产生真实网络请求和报告，不读取浏览器的 SSO 会话；未单独注入令牌时多数用例跳过。不要用这类跳过结果证明业务接口已可用。
 
-[MIT](LICENSE)
+能力页直接引用仓库 `reports/20261013-1938-ppe.json` 的历史证据，不会用示例输出修改报告。此报告的 1 项 PASS 是 O6 环境配置观察，不代表双环境业务链路已通过；另有 2 项文档差异和 44 项未验证。
+
+- [改造及验证说明](docs/SIMPLIFICATION.md)
+- [API 覆盖矩阵](docs/API_COVERAGE.md)
+- [排查手册](docs/TROUBLESHOOTING.md)
+- [问题记录](docs/ISSUES.md)
+
+MIT，见 [LICENSE](LICENSE)。
